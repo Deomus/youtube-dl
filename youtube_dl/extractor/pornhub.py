@@ -465,8 +465,20 @@ class PornHubIE(PornHubBaseIE):
                  r'<span[^>]+\bclass=["\']votes%s["\'][^>]*\bdata-rating=["\'](\d+)' % kind),
                 webpage, name)
 
-        view_count = self._extract_count(
-            r'<span class="count">([\d,\.]+)</span> [Vv]iews', webpage, 'view')
+        view_count_str = self._search_regex(
+            r'<div\s+class=["\']views["\']>.*?<span\s+class=["\']count["\'][^>]*>\s*([\d,\.]+(?:[MK])?)\s*</span>',
+            webpage, 'view count', default=None)
+        if view_count_str:
+            view_count_str = view_count_str.strip()
+            if view_count_str.endswith('M'):
+                view_count = int(float(view_count_str[:-1].replace(',', '.')) * 1000000)
+            elif view_count_str.endswith('K'):
+                view_count = int(float(view_count_str[:-1].replace(',', '.')) * 1000)
+            else:
+                view_count = int_or_none(view_count_str.replace(',', ''))
+        else:
+            view_count = None
+
         like_count = extract_vote_count('Up', 'like')
         dislike_count = extract_vote_count('Down', 'dislike')
         comment_count = self._extract_count(
